@@ -117,3 +117,62 @@ def test_daily_min(test, expected):
 #print(random.sample(range(0,100),10))
 #random.seed(1)
 #print(random.sample(range(0,100),10))
+
+@pytest.mark.parametrize(
+    "test, expected",
+    [
+        ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[0.33, 0.67, 1], [0.67, 0.83, 1], [0.78, 0.89, 1]])
+    ])
+def test_patient_normalise(test, expected):
+    """Test normalisation works for arrays of one and positive integers.
+       Assumption that test accuracy of two decimal places is sufficient."""
+    from inflammation.models import patient_normalise
+    npt.assert_almost_equal(patient_normalise(np.array(test)), np.array(expected), decimal=2)
+
+    @pytest.mark.parametrize(
+        "test, expected",
+        [
+            ([[0, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
+            ([[1, 1, 1], [1, 1, 1], [1, 1, 1]], [[1, 1, 1], [1, 1, 1], [1, 1, 1]]),
+            ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[0.33, 0.67, 1], [0.67, 0.83, 1], [0.78, 0.89, 1]]),
+        ])
+
+    def patient_normalise(data):
+        """
+        Normalise patient data from a 2D inflammation data array.
+
+        NaN values are ignored, and normalised to 0.
+
+        Negative values are rounded to 0.
+        """
+        max = np.nanmax(data, axis=1)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            normalised = data / max[:, np.newaxis]
+        normalised[np.isnan(normalised)] = 0
+        normalised[normalised < 0] = 0
+        return normalised
+
+@pytest.mark.parametrize(
+    "test, expected, expect_raises",
+    [
+        ... # previous test cases here, with None for expect_raises, except for the next one - add ValueError
+        ... # as an expected exception (since it has a negative input value)
+        (
+            [[-1, 2, 3], [4, 5, 6], [7, 8, 9]],
+            [[0, 0.67, 1], [0.67, 0.83, 1], [0.78, 0.89, 1]],
+            ValueError,
+        ),
+        (
+            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+            [[0.33, 0.67, 1], [0.67, 0.83, 1], [0.78, 0.89, 1]],
+            None,
+        ),
+    ])
+def test_patient_normalise(test, expected, expect_raises):
+    """Test normalisation works for arrays of one and positive integers."""
+    from inflammation.models import patient_normalise
+    if expect_raises is not None:
+        with pytest.raises(expect_raises):
+            npt.assert_almost_equal(patient_normalise(np.array(test)), np.array(expected), decimal=2)
+    else:
+        npt.assert_almost_equal(patient_normalise(np.array(test)), np.array(expected), decimal=2)
