@@ -128,3 +128,16 @@ def test_patient_normalise(test, expected):
        Assumption that test accuracy of two decimal places is sufficient."""
     from inflammation.models import patient_normalise
     npt.assert_almost_equal(patient_normalise(np.array(test)), np.array(expected), decimal=2)
+
+
+@pytest.mark.parametrize(
+    "test, expected",
+    [
+        ([ [0, 0, 0], [0, 0, 0], [0, 0, 0] ], [0, 0, 0]),
+        ([ [4, 2, 5], [1, 6, 2], [4, 1, 9] ], [1.2, 2.2, 3.3]),
+        ([ [4, -2, 5], [1, -6, 2], [-4, -1, 9] ], [3.1, 3.6, 5.6]),
+    ])
+def test_daily_std_dev(test, expected):
+    """Test min function works for zeroes, positive integers, mix of positive/negative integers."""
+    from inflammation.models import daily_std_dev
+    npt.assert_almost_equal(daily_std_dev(np.array(test)), np.array(expected), decimal=1)
